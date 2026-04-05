@@ -708,8 +708,8 @@ async def simple_analyze_contract(request: SimpleAnalyzeRequest):
                 detail="Contract text too short. Please provide at least 100 characters."
             )
         
-        # Limit input to reduce costs (max 8000 chars)
-        contract_text = request.contract_text[:8000]
+        # Limit input to reduce costs (max 10000 chars)
+        contract_text = request.contract_text[:10000]
         
         # AI Analysis with strict prompt
         chat = LlmChat(

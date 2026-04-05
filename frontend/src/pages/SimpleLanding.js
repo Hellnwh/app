@@ -10,6 +10,7 @@ import axios from 'axios';
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
 const API = `${BACKEND_URL}/api`;
 const MAX_FREE_USES = 3;
+const MAX_CHARACTERS = 10000;
 
 const SimpleLanding = () => {
   const navigate = useNavigate();
@@ -36,8 +37,12 @@ const SimpleLanding = () => {
     }
 
     if (contractText.length < 100) {
-      toast.error('Contract text is too short. Please provide more details.');
+      toast.error('Contract text is too short. Please provide at least 100 characters.');
       return;
+    }
+
+    if (contractText.length > MAX_CHARACTERS) {
+      toast.warning(`Text exceeds ${MAX_CHARACTERS} characters. Only the first ${MAX_CHARACTERS} characters will be analyzed.`);
     }
 
     if (!consent) {
@@ -209,14 +214,16 @@ const SimpleLanding = () => {
               Paste Your Contract Here
             </label>
             <Textarea
-              placeholder="Paste the complete contract text here...\n\nExample: This agreement is made on...\n\nMinimum 100 characters required."
+              placeholder="Paste the complete contract text here (up to 10,000 characters)...\n\nExample: This agreement is made on...\n\nMinimum 100 characters required."
               value={contractText}
               onChange={(e) => setContractText(e.target.value)}
               className="min-h-[300px] border-slate-300 font-mono text-sm"
               data-testid="contract-input"
             />
-            <p className="text-xs text-slate-500 mt-2">
-              Characters: {contractText.length} (minimum 100 required)
+            <p className={`text-xs mt-2 ${contractText.length > MAX_CHARACTERS ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+              Characters: {contractText.length.toLocaleString()} / {MAX_CHARACTERS.toLocaleString()} 
+              {contractText.length < 100 && ' (minimum 100 required)'}
+              {contractText.length > MAX_CHARACTERS && ` (⚠️ Exceeds limit - only first ${MAX_CHARACTERS.toLocaleString()} will be analyzed)`}
             </p>
 
             {/* Consent Checkbox */}
