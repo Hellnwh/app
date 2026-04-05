@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Textarea } from '../components/ui/textarea';
 import { Checkbox } from '../components/ui/checkbox';
 import { toast } from 'sonner';
-import { Shield, AlertTriangle, CheckCircle, XCircle, Info, Loader2, FileText } from 'lucide-react';
+import { Shield, AlertTriangle, CheckCircle, XCircle, Info, Loader2, FileText, Upload, Sparkles } from 'lucide-react';
 import axios from 'axios';
 
 const BACKEND_URL = process.env.REACT_APP_BACKEND_URL;
@@ -20,6 +20,8 @@ const SimpleLanding = () => {
   const [analysis, setAnalysis] = useState(null);
   const [usageCount, setUsageCount] = useState(0);
   const [showPaywall, setShowPaywall] = useState(false);
+  const [uploadedFile, setUploadedFile] = useState(null);
+  const [inputMode, setInputMode] = useState('text'); // 'text' or 'file'
 
   useEffect(() => {
     // Load usage count from localStorage
@@ -31,18 +33,24 @@ const SimpleLanding = () => {
   }, []);
 
   const handleAnalyze = async () => {
-    if (!contractText.trim()) {
-      toast.error('Please paste your contract text');
-      return;
-    }
-
-    if (contractText.length < 100) {
-      toast.error('Contract text is too short. Please provide at least 100 characters.');
-      return;
-    }
-
-    if (contractText.length > MAX_CHARACTERS) {
-      toast.warning(`Text exceeds ${MAX_CHARACTERS} characters. Only the first ${MAX_CHARACTERS} characters will be analyzed.`);
+    // Validate input
+    if (inputMode === 'text') {
+      if (!contractText.trim()) {
+        toast.error('Please paste your contract text');
+        return;
+      }
+      if (contractText.length < 100) {
+        toast.error('Contract text is too short. Please provide at least 100 characters.');
+        return;
+      }
+      if (contractText.length > MAX_CHARACTERS) {
+        toast.warning(`Text exceeds ${MAX_CHARACTERS} characters. Only the first ${MAX_CHARACTERS} characters will be analyzed.`);
+      }
+    } else {
+      if (!uploadedFile) {
+        toast.error('Please upload a PDF file');
+        return;
+      }
     }
 
     if (!consent) {
@@ -59,9 +67,24 @@ const SimpleLanding = () => {
 
     setAnalyzing(true);
     try {
-      const response = await axios.post(`${API}/analyze`, {
-        contract_text: contractText
-      });
+      let response;
+      
+      if (inputMode === 'text') {
+        // Text analysis
+        response = await axios.post(`${API}/analyze`, {
+          contract_text: contractText
+        });
+      } else {
+        // File upload analysis
+        const formData = new FormData();
+        formData.append('file', uploadedFile);
+        
+        response = await axios.post(`${API}/analyze-file`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data'
+          }
+        });
+      }
 
       setAnalysis(response.data);
       
@@ -106,9 +129,33 @@ const SimpleLanding = () => {
     return styles[status] || styles.needs_review;
   };
 
+  const handleFileUpload = (event) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    // Validate file type
+    if (!file.name.endsWith('.pdf')) {
+      toast.error('Only PDF files are supported');
+      return;
+    }
+
+    // Validate file size (100 MB)
+    const maxSize = 100 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`File too large. Maximum size is 100 MB. Your file is ${(file.size / (1024*1024)).toFixed(1)} MB.`);
+      return;
+    }
+
+    setUploadedFile(file);
+    setInputMode('file');
+    toast.success(`File "${file.name}" uploaded successfully`);
+  };
+
   const resetAnalysis = () => {
     setAnalysis(null);
     setContractText('');
+    setUploadedFile(null);
+    setInputMode('text');
     setConsent(false);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
@@ -210,21 +257,118 @@ const SimpleLanding = () => {
         {/* Input Section */}
         {!analysis && !showPaywall && (
           <div className="bg-white p-6 rounded-md border border-slate-200 mb-6" data-testid="input-section">
-            <label className="block text-sm font-medium text-slate-700 mb-2">
-              Paste Your Contract Here
-            </label>
-            <Textarea
-              placeholder="Paste the complete contract text here (up to 10,000 characters)...\n\nExample: This agreement is made on...\n\nMinimum 100 characters required."
-              value={contractText}
-              onChange={(e) => setContractText(e.target.value)}
-              className="min-h-[300px] border-slate-300 font-mono text-sm"
-              data-testid="contract-input"
-            />
-            <p className={`text-xs mt-2 ${contractText.length > MAX_CHARACTERS ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
-              Characters: {contractText.length.toLocaleString()} / {MAX_CHARACTERS.toLocaleString()} 
-              {contractText.length < 100 && ' (minimum 100 required)'}
-              {contractText.length > MAX_CHARACTERS && ` (⚠️ Exceeds limit - only first ${MAX_CHARACTERS.toLocaleString()} will be analyzed)`}
-            </p>
+            {/* Mode Toggle */}
+            <div className="flex space-x-2 mb-4">
+              <Button
+                variant={inputMode === 'text' ? 'default' : 'outline'}
+                onClick={() => setInputMode('text')}
+                className={inputMode === 'text' ? 'bg-slate-900' : 'border-slate-300'}
+                data-testid="text-mode-button"
+              >
+                <FileText className="h-4 w-4 mr-2" />
+                Paste Text
+              </Button>
+              <Button
+                variant={inputMode === 'file' ? 'default' : 'outline'}
+                onClick={() => setInputMode('file')}
+                className={inputMode === 'file' ? 'bg-slate-900' : 'border-slate-300'}
+                data-testid="file-mode-button"
+              >
+                <Upload className="h-4 w-4 mr-2" />
+                Upload PDF
+              </Button>
+            </div>
+
+            {/* Text Input Mode */}
+            {inputMode === 'text' && (
+              <>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Paste Your Contract Here
+                </label>
+                <Textarea
+                  placeholder="Paste the complete contract text here (up to 10,000 characters)...\n\nExample: This agreement is made on...\n\nMinimum 100 characters required."
+                  value={contractText}
+                  onChange={(e) => setContractText(e.target.value)}
+                  className="min-h-[300px] border-slate-300 font-mono text-sm"
+                  data-testid="contract-input"
+                />
+                <p className={`text-xs mt-2 ${contractText.length > MAX_CHARACTERS ? 'text-amber-600 font-semibold' : 'text-slate-500'}`}>
+                  Characters: {contractText.length.toLocaleString()} / {MAX_CHARACTERS.toLocaleString()} 
+                  {contractText.length < 100 && ' (minimum 100 required)'}
+                  {contractText.length > MAX_CHARACTERS && ` (⚠️ Exceeds limit - only first ${MAX_CHARACTERS.toLocaleString()} will be analyzed)`}
+                </p>
+              </>
+            )}
+
+            {/* File Upload Mode */}
+            {inputMode === 'file' && (
+              <>
+                <label className="block text-sm font-medium text-slate-700 mb-2">
+                  Upload PDF Contract
+                </label>
+                
+                {!uploadedFile ? (
+                  <div className="border-2 border-dashed border-slate-300 rounded-md p-12 text-center hover:border-slate-400 transition-colors">
+                    <Upload className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+                    <p className="text-slate-900 mb-2 font-medium">
+                      Click to upload or drag and drop
+                    </p>
+                    <p className="text-sm text-slate-500 mb-4">
+                      PDF files only (Max size: 100 MB)
+                    </p>
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                      id="file-upload"
+                      data-testid="file-input"
+                    />
+                    <label htmlFor="file-upload">
+                      <Button
+                        as="span"
+                        variant="outline"
+                        className="border-slate-300 cursor-pointer"
+                      >
+                        Select PDF File
+                      </Button>
+                    </label>
+                  </div>
+                ) : (
+                  <div className="border border-slate-300 rounded-md p-6 bg-slate-50" data-testid="uploaded-file-info">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3">
+                        <div className="bg-red-100 p-3 rounded-md">
+                          <FileText className="h-6 w-6 text-red-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-900">{uploadedFile.name}</p>
+                          <p className="text-sm text-slate-500">
+                            {(uploadedFile.size / 1024).toFixed(1)} KB
+                          </p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => {
+                          setUploadedFile(null);
+                          document.getElementById('file-upload').value = '';
+                        }}
+                        className="text-slate-600 hover:text-slate-900"
+                        data-testid="remove-file-button"
+                      >
+                        <XCircle className="h-5 w-5" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <p className="text-xs text-slate-500 mt-2">
+                  📄 The AI will extract and analyze text from your PDF contract
+                </p>
+              </>
+            )}
 
             {/* Consent Checkbox */}
             <div className="mt-6 p-4 bg-slate-50 rounded-md border border-slate-200">
@@ -244,18 +388,18 @@ const SimpleLanding = () => {
             {/* Analyze Button */}
             <Button
               onClick={handleAnalyze}
-              disabled={analyzing || !consent || contractText.length < 100}
+              disabled={analyzing || !consent || (inputMode === 'text' ? contractText.length < 100 : !uploadedFile)}
               className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white py-6 text-base"
               data-testid="analyze-button"
             >
               {analyzing ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Analyzing Contract...
+                  Analyzing {inputMode === 'file' ? 'PDF' : 'Contract'}...
                 </>
               ) : (
                 <>
-                  <FileText className="h-5 w-5 mr-2" />
+                  <Sparkles className="h-5 w-5 mr-2" />
                   Analyze Contract Now
                 </>
               )}

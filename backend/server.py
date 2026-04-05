@@ -700,7 +700,7 @@ class SimpleAnalyzeRequest(BaseModel):
 
 @api_router.post("/analyze")
 async def simple_analyze_contract(request: SimpleAnalyzeRequest):
-    """Simple contract analysis without authentication"""
+    """Simple contract analysis without authentication - text input"""
     try:
         if not request.contract_text or len(request.contract_text.strip()) < 100:
             raise HTTPException(
@@ -711,14 +711,83 @@ async def simple_analyze_contract(request: SimpleAnalyzeRequest):
         # Limit input to reduce costs (max 10000 chars)
         contract_text = request.contract_text[:10000]
         
-        # AI Analysis with strict prompt
-        chat = LlmChat(
-            api_key=EMERGENT_LLM_KEY,
-            session_id=str(uuid.uuid4()),
-            system_message="You are a contract risk analyst. Provide clear, simple analysis. NEVER invent information."
-        ).with_model("openai", "gpt-5.1")
+        return await analyze_contract_with_ai_simple(contract_text)
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"Simple analysis error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"Analysis failed: {str(e)}"
+        )
+
+@api_router.post("/analyze-file")
+async def simple_analyze_file(file: UploadFile = File(...)):
+    """Simple contract analysis without authentication - file upload"""
+    try:
+        # Validate file type
+        if not file.filename.endswith('.pdf'):
+            raise HTTPException(
+                status_code=400,
+                detail="Only PDF files are supported. Please upload a PDF file."
+            )
         
-        analysis_prompt = f"""Analyze this contract and return ONLY valid JSON with this exact structure:
+        # Read file
+        file_bytes = await file.read()
+        
+        # Validate file size (100 MB max)
+        max_size = 100 * 1024 * 1024  # 100 MB in bytes
+        if len(file_bytes) > max_size:
+            raise HTTPException(
+                status_code=400,
+                detail=f"File too large. Maximum size is 100 MB. Your file is {len(file_bytes) / (1024*1024):.1f} MB."
+            )
+        
+        # Extract text from PDF
+        try:
+            pdf_reader = PyPDF2.PdfReader(BytesIO(file_bytes))
+            text = ""
+            for page in pdf_reader.pages:
+                text += page.extract_text() + "\n"
+            text = text.strip()
+        except Exception as e:
+            raise HTTPException(
+                status_code=400,
+                detail=f"Failed to extract text from PDF: {str(e)}"
+            )
+        
+        # Validate extracted text
+        if len(text) < 100:
+            raise HTTPException(
+                status_code=400,
+                detail="Could not extract enough text from PDF. Please ensure the PDF contains readable text (not scanned images)."
+            )
+        
+        # Limit to 10000 chars
+        contract_text = text[:10000]
+        
+        return await analyze_contract_with_ai_simple(contract_text)
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        logging.error(f"File analysis error: {str(e)}")
+        raise HTTPException(
+            status_code=500,
+            detail=f"File analysis failed: {str(e)}"
+        )
+
+async def analyze_contract_with_ai_simple(contract_text: str) -> dict:
+    """Helper function to analyze contract text with AI"""
+    # AI Analysis with strict prompt
+    chat = LlmChat(
+        api_key=EMERGENT_LLM_KEY,
+        session_id=str(uuid.uuid4()),
+        system_message="You are a contract risk analyst. Provide clear, simple analysis. NEVER invent information."
+    ).with_model("openai", "gpt-5.1")
+    
+    analysis_prompt = f"""Analyze this contract and return ONLY valid JSON with this exact structure:
 
 {{
   "summary": "Simple 2-3 sentence summary in easy English (no legal jargon)",
@@ -751,59 +820,50 @@ RULES:
 Contract:
 {contract_text}
 """
+    
+    message = UserMessage(text=analysis_prompt)
+    response = await chat.send_message(message)
+    
+    # Parse JSON response
+    try:
+        response_text = response.strip()
+        # Remove markdown code blocks if present
+        if response_text.startswith("```json"):
+            response_text = response_text[7:]
+        if response_text.startswith("```"):
+            response_text = response_text[3:]
+        if response_text.endswith("```"):
+            response_text = response_text[:-3]
         
-        message = UserMessage(text=analysis_prompt)
-        response = await chat.send_message(message)
+        analysis = json.loads(response_text.strip())
+        return analysis
         
-        # Parse JSON response
-        try:
-            response_text = response.strip()
-            # Remove markdown code blocks if present
-            if response_text.startswith("```json"):
-                response_text = response_text[7:]
-            if response_text.startswith("```"):
-                response_text = response_text[3:]
-            if response_text.endswith("```"):
-                response_text = response_text[:-3]
-            
-            analysis = json.loads(response_text.strip())
-            return analysis
-            
-        except json.JSONDecodeError as e:
-            logging.error(f"JSON parsing error: {str(e)}")
-            logging.error(f"Response: {response}")
-            
-            # Fallback response
-            return {
-                "summary": "Analysis completed. Please review the contract carefully.",
-                "key_points": ["Contract requires careful review"],
-                "risks": [{
-                    "risk": "Unable to fully parse contract",
-                    "severity": "medium",
-                    "explanation": "AI had difficulty analyzing the document structure"
-                }],
-                "obligations": ["Review contract with legal counsel"],
-                "important_terms": {
-                    "money": "Not specified",
-                    "dates": "Not specified",
-                    "penalties": "Not specified",
-                    "duration": "Not specified"
-                },
-                "worst_case_scenario": "Without proper analysis, you may agree to unfavorable terms.",
-                "final_verdict": {
-                    "status": "needs_review",
-                    "reason": "Analysis incomplete - seek professional review"
-                }
+    except json.JSONDecodeError as e:
+        logging.error(f"JSON parsing error: {str(e)}")
+        logging.error(f"Response: {response}")
+        
+        # Fallback response
+        return {
+            "summary": "Analysis completed. Please review the contract carefully.",
+            "key_points": ["Contract requires careful review"],
+            "risks": [{
+                "risk": "Unable to fully parse contract",
+                "severity": "medium",
+                "explanation": "AI had difficulty analyzing the document structure"
+            }],
+            "obligations": ["Review contract with legal counsel"],
+            "important_terms": {
+                "money": "Not specified",
+                "dates": "Not specified",
+                "penalties": "Not specified",
+                "duration": "Not specified"
+            },
+            "worst_case_scenario": "Without proper analysis, you may agree to unfavorable terms.",
+            "final_verdict": {
+                "status": "needs_review",
+                "reason": "Analysis incomplete - seek professional review"
             }
-            
-    except HTTPException:
-        raise
-    except Exception as e:
-        logging.error(f"Simple analysis error: {str(e)}")
-        raise HTTPException(
-            status_code=500,
-            detail=f"Analysis failed: {str(e)}"
-        )
+        }
 
 
 # Include router
