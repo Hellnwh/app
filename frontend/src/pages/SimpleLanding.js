@@ -201,25 +201,57 @@ const SimpleLanding = () => {
       <div className="max-w-4xl mx-auto px-6 py-12">
         {/* Hero Section */}
         {!analysis && (
-          <div className="text-center mb-12">
-            <h2 className="text-4xl sm:text-5xl font-semibold text-slate-900 mb-4">
+          <div className="text-center mb-12 fade-in">
+            <div className="mb-6">
+              <img 
+                src="https://images.unsplash.com/photo-1770171323762-7b9a517a7094?w=400&q=80" 
+                alt="AI Technology"
+                className="w-24 h-24 mx-auto rounded-full object-cover float-animation"
+              />
+            </div>
+            <h2 className="text-4xl sm:text-5xl font-semibold text-slate-900 mb-4 slide-in-left">
               Don't Sign Blindly.<br />Know the Risks First.
             </h2>
-            <p className="text-lg text-slate-600 mb-6">
-              Paste your contract and get a clear, simple explanation in seconds.
+            <p className="text-lg text-slate-600 mb-6 slide-in-right" style={{animationDelay: '0.1s'}}>
+              Upload your contract or paste text and get a clear, simple explanation in seconds.
             </p>
-            <div className="flex items-center justify-center space-x-6 text-sm text-slate-600">
+            <div className="flex items-center justify-center space-x-6 text-sm text-slate-600 scale-in" style={{animationDelay: '0.2s'}}>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600" />
-                <span>Simple. Clear. Safe.</span>
+                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></div>
+                <span>AI-Powered Analysis</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600" />
-                <span>Understand in seconds</span>
+                <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" style={{animationDelay: '0.3s'}}></div>
+                <span>Instant Results</span>
               </div>
               <div className="flex items-center space-x-2">
-                <CheckCircle className="h-4 w-4 text-emerald-600" />
-                <span>Avoid hidden traps</span>
+                <div className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" style={{animationDelay: '0.6s'}}></div>
+                <span>Risk Detection</span>
+              </div>
+            </div>
+            
+            {/* Visual Features Row */}
+            <div className="grid grid-cols-3 gap-4 mt-12 max-w-2xl mx-auto">
+              <div className="text-center p-4 bg-white rounded-lg border border-slate-200 card-hover">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center feature-icon">
+                  <FileText className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-sm font-medium text-slate-700">Upload PDF</p>
+                <p className="text-xs text-slate-500">Up to 100 MB</p>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg border border-slate-200 card-hover">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center feature-icon">
+                  <Sparkles className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-sm font-medium text-slate-700">AI Analysis</p>
+                <p className="text-xs text-slate-500">GPT-5.1</p>
+              </div>
+              <div className="text-center p-4 bg-white rounded-lg border border-slate-200 card-hover">
+                <div className="w-16 h-16 mx-auto mb-3 bg-gradient-to-br from-red-500 to-pink-600 rounded-full flex items-center justify-center feature-icon">
+                  <Shield className="h-8 w-8 text-white" />
+                </div>
+                <p className="text-sm font-medium text-slate-700">Risk Detection</p>
+                <p className="text-xs text-slate-500">Instant alerts</p>
               </div>
             </div>
           </div>
@@ -256,13 +288,13 @@ const SimpleLanding = () => {
 
         {/* Input Section */}
         {!analysis && !showPaywall && (
-          <div className="bg-white p-6 rounded-md border border-slate-200 mb-6" data-testid="input-section">
+          <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-lg mb-6 scale-in" data-testid="input-section">
             {/* Mode Toggle */}
-            <div className="flex space-x-2 mb-4">
+            <div className="flex space-x-2 mb-6">
               <Button
                 variant={inputMode === 'text' ? 'default' : 'outline'}
                 onClick={() => setInputMode('text')}
-                className={inputMode === 'text' ? 'bg-slate-900' : 'border-slate-300'}
+                className={`flex-1 btn-smooth ${inputMode === 'text' ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'border-slate-300'}`}
                 data-testid="text-mode-button"
               >
                 <FileText className="h-4 w-4 mr-2" />
@@ -271,7 +303,7 @@ const SimpleLanding = () => {
               <Button
                 variant={inputMode === 'file' ? 'default' : 'outline'}
                 onClick={() => setInputMode('file')}
-                className={inputMode === 'file' ? 'bg-slate-900' : 'border-slate-300'}
+                className={`flex-1 btn-smooth ${inputMode === 'file' ? 'bg-gradient-to-r from-slate-800 to-slate-900' : 'border-slate-300'}`}
                 data-testid="file-mode-button"
               >
                 <Upload className="h-4 w-4 mr-2" />
@@ -324,14 +356,11 @@ const SimpleLanding = () => {
                       id="file-upload"
                       data-testid="file-input"
                     />
-                    <label htmlFor="file-upload">
-                      <Button
-                        as="span"
-                        variant="outline"
-                        className="border-slate-300 cursor-pointer"
-                      >
-                        Select PDF File
-                      </Button>
+                    <label 
+                      htmlFor="file-upload"
+                      className="inline-flex items-center justify-center rounded-md text-sm font-medium border border-slate-300 bg-white hover:bg-slate-50 h-10 px-4 py-2 cursor-pointer transition-colors"
+                    >
+                      Select PDF File
                     </label>
                   </div>
                 ) : (
@@ -389,18 +418,23 @@ const SimpleLanding = () => {
             <Button
               onClick={handleAnalyze}
               disabled={analyzing || !consent || (inputMode === 'text' ? contractText.length < 100 : !uploadedFile)}
-              className="w-full mt-6 bg-slate-900 hover:bg-slate-800 text-white py-6 text-base"
+              className="w-full mt-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white py-6 text-base font-semibold btn-smooth shadow-lg"
               data-testid="analyze-button"
             >
               {analyzing ? (
                 <>
                   <Loader2 className="h-5 w-5 mr-2 animate-spin" />
-                  Analyzing {inputMode === 'file' ? 'PDF' : 'Contract'}...
+                  <span className="flex items-center">
+                    Analyzing {inputMode === 'file' ? 'PDF' : 'Contract'}
+                    <span className="loading-dot ml-1">.</span>
+                    <span className="loading-dot">.</span>
+                    <span className="loading-dot">.</span>
+                  </span>
                 </>
               ) : (
                 <>
                   <Sparkles className="h-5 w-5 mr-2" />
-                  Analyze Contract Now
+                  Analyze Contract Now - Free
                 </>
               )}
             </Button>
