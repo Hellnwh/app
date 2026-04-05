@@ -1,0 +1,94 @@
+{
+  "project_name": "Contract Simplifier AI",
+  "theme": "LIGHT",
+  "archetype": "Archetype 4 (Swiss & High-Contrast)",
+  "emotional_tone": "Authoritative, Clear, Safe, Functional",
+  "design_philosophy": "Color is function only. 95% of the UI should be monochrome (white, crisp greys, stark black text) to build ultimate trust and readability. Semantic colors (Red, Yellow, Green) exist purely to highlight risk levels in legal documents.",
+  "colors": {
+    "background": {
+      "primary": "bg-slate-50",
+      "surface": "bg-white",
+      "texture": "Use subtle noise/paper texture for landing page background."
+    },
+    "text": {
+      "primary": "text-slate-900",
+      "secondary": "text-slate-600",
+      "muted": "text-slate-400"
+    },
+    "primary_action": {
+      "default": "bg-slate-900",
+      "hover": "bg-slate-800",
+      "text": "text-white"
+    },
+    "semantic_risks": {
+      "high_risk": {
+        "bg": "bg-red-50",
+        "text": "text-red-700",
+        "border": "border-red-200"
+      },
+      "medium_risk": {
+        "bg": "bg-amber-50",
+        "text": "text-amber-700",
+        "border": "border-amber-200"
+      },
+      "safe": {
+        "bg": "bg-emerald-50",
+        "text": "text-emerald-700",
+        "border": "border-emerald-200"
+      }
+    }
+  },
+  "typography": {
+    "fonts": {
+      "headings": "'Work Sans', sans-serif",
+      "body": "'IBM Plex Sans', sans-serif"
+    },
+    "rules": {
+      "h1": "text-4xl sm:text-5xl lg:text-6xl tracking-tight font-semibold text-slate-900",
+      "h2": "text-2xl sm:text-3xl lg:text-4xl tracking-tight font-medium text-slate-900",
+      "h3": "text-xl sm:text-2xl font-medium text-slate-800",
+      "body": "text-base leading-relaxed text-slate-600",
+      "labels": "text-xs uppercase tracking-[0.2em] font-semibold text-slate-500"
+    },
+    "import_instruction": "Add to index.html: <link href=\"https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&family=Work+Sans:wght@400;500;600;700&display=swap\" rel=\"stylesheet\">"
+  },
+  "spacing_and_layout": {
+    "container_padding": "p-6 md:p-12",
+    "dashboard_grid": "Grid Layout: Use grid-cols-1 lg:grid-cols-12. Main document view takes col-span-8, AI Analysis panel takes col-span-4. Tight gaps (gap-6) for density.",
+    "bento_spacing": "For marketing page: Use Mode A 'Tetris' grid with wide gaps (gap-8 to gap-12).",
+    "surface_treatment": "Cardless/Technical look. Use border-collapse styles or crisp 1px borders (border-slate-200) with NO shadows for a Swiss brutalist technical vibe. Max border radius: rounded-md (6px)."
+  },
+  "components": {
+    "buttons": "Square or slightly rounded (rounded-md). High contrast (black on white, or white on black). Avoid gradients.",
+    "document_viewer": "White background, scrollable, with highlighted inline text chunks matching the risk colors. Left-aligned text for readability.",
+    "disclaimer_banner": "MUST be sticky at the top or bottom of the dashboard. Yellow/Amber subtle background with black text: 'This tool provides AI-generated summaries and is NOT legal advice.'",
+    "chat_interface": "Minimalist bento box within the analysis panel. Differentiate AI messages with a slate-50 background and user messages with a white background and slate-200 border."
+  },
+  "media_and_images": {
+    "hero_abstract_document": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/1908d32d-b7af-4a6e-be04-cfc90d18439e/images/d6bf64aae63a3ca9ea5eaf31dc5a1e841dabd4548104099a2c5c34f8a162bbed.png",
+      "category": "marketing_hero",
+      "description": "Abstract floating glass document for the main landing page hero section."
+    },
+    "paper_texture_bg": {
+      "url": "https://static.prod-images.emergentagent.com/jobs/1908d32d-b7af-4a6e-be04-cfc90d18439e/images/62706742697e68d80d1d2c339025b9c9b012f892c0cd285a3f787041ce9c3922.png",
+      "category": "background",
+      "description": "Subtle paper texture to be applied as a background with low opacity on the marketing page."
+    },
+    "testimonial_avatar": {
+      "url": "https://images.unsplash.com/photo-1633625510483-c177f4308f33?crop=entropy&cs=srgb&fm=jpg&ixid=M3w3NDk1ODB8MHwxfHNlYXJjaHwyfHxwcm9mZXNzaW9uYWwlMjBoZWFkc2hvdCUyMGF2YXRhcnxlbnwwfHx8fDE3NzU0MDAzNTl8MA&ixlib=rb-4.1.0&q=85",
+      "category": "social_proof",
+      "description": "Professional avatar for user testimonial."
+    }
+  },
+  "instructions_to_main_agent": [
+    "Strictly follow the color palette: Avoid 'SaaS Blue', Teal, or Purple. Only use Red, Yellow, Green for risk semantics, and monochrome (Slate/Black/White) for everything else.",
+    "CRITICAL: Include the 'data-testid' attribute on ALL interactive elements (buttons, inputs, links, risk tags) to support testing.",
+    "UI Layout: Implement a Drag-and-drop upload zone on the dashboard. Create a two-column Analyzer layout and a dense List View for saved contracts.",
+    "Document Highlighting: Ensure the extracted text cleanly displays and maps visual highlights (red/yellow/green background spans) directly over clauses.",
+    "Component Library: Use Shadcn UI (HTML/Tailwind structure), but customize the Cards to have flat 1px borders (border-slate-200) and no drop-shadows to fit the Swiss archetype.",
+    "Monetization/Upgrade UI: The 'Upgrade to Pro' CTA should be visually prominent (e.g., solid Black button) in the sidebar or header.",
+    "Icons: Install and use 'lucide-react' for all functional icons (upload, check, alert-triangle, shield).",
+    "Disclaimer: The 'AI can make mistakes. This is not legal advice' notice MUST be clearly visible at all times."
+  ]
+}
